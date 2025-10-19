@@ -160,8 +160,10 @@ The application uses Next.js API routes as a secure proxy:
 
 ### API Documentation & Testing
 
+- **[Postman Guide](./docs/POSTMAN_GUIDE.md)** - Complete guide for API testing with Postman
 - **[Databricks Genie API Collection](./docs/Databricks_Genie_API.postman_collection.json)** - Postman collection for official Databricks Genie API
 - **[Genie Next.js API Collection](./docs/Genie_Next_API.postman_collection.json)** - Postman collection for our Next.js wrapper API
+
 
 ### External References
 
@@ -345,6 +347,3 @@ For support, please contact:
 - Icons by [Lucide](https://lucide.dev/)
 - Powered by [Databricks Genie](https://databricks.com/)
 
----
-
-**Made with ❤️ using Next.js, TypeScript, and Tailwind CSS v4**
