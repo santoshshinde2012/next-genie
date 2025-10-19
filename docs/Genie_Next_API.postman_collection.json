@@ -1,0 +1,478 @@
+{
+	"info": {
+		"_postman_id": "genie-next-api-v1",
+		"name": "Genie Next.js API",
+		"description": "Next.js API routes that provide a secure wrapper around Databricks Genie APIs.\n\n## Overview\nThis collection contains the Next.js API endpoints that act as a proxy to Databricks Genie, providing:\n- Secure credential management\n- Simplified request/response interfaces\n- Automatic retry logic\n- Error handling and transformation\n\n## Architecture\nThe Next.js API routes handle:\n1. Authentication with Databricks (server-side)\n2. Request validation\n3. Response transformation\n4. Error handling\n\n## Base URL\n`http://localhost:3000/api` (development)\n`https://your-domain.com/api` (production)\n\n## Authentication\nNo authentication required for these endpoints as they run on your server. The server handles Databricks authentication internally using environment variables.\n\n## Environment Variables Required\n- `DATABRICKS_HOST`\n- `DATABRICKS_TOKEN`\n- `DATABRICKS_SPACE_ID`",
+		"schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json",
+		"_exporter_id": "genie-next"
+	},
+	"item": [
+		{
+			"name": "Conversations",
+			"item": [
+				{
+					"name": "Start Conversation",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"pm.test(\"Status code is 200\", function () {",
+									"    pm.response.to.have.status(200);",
+									"});",
+									"",
+									"pm.test(\"Response has required fields\", function () {",
+									"    var jsonData = pm.response.json();",
+									"    pm.expect(jsonData).to.have.property('conversation_id');",
+									"    pm.expect(jsonData).to.have.property('message_id');",
+									"});",
+									"",
+									"// Save for subsequent requests",
+									"if (pm.response.code === 200) {",
+									"    var jsonData = pm.response.json();",
+									"    pm.collectionVariables.set(\"conversationId\", jsonData.conversation_id);",
+									"    pm.collectionVariables.set(\"messageId\", jsonData.message_id);",
+									"    console.log(\"✓ Conversation started: \" + jsonData.conversation_id);",
+									"}"
+								],
+								"type": "text/javascript"
+							}
+						}
+					],
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n  \"content\": \"Show me the top 10 products by sales\"\n}",
+							"options": {
+								"raw": {
+									"language": "json"
+								}
+							}
+						},
+						"url": {
+							"raw": "{{BASE_URL}}/genie/start",
+							"host": [
+								"{{BASE_URL}}"
+							],
+							"path": [
+								"genie",
+								"start"
+							]
+						},
+						"description": "Initiates a new conversation with Genie.\n\n**Request Body:**\n```json\n{\n  \"content\": \"Your natural language query\"\n}\n```\n\n**Response:**\n```json\n{\n  \"conversation_id\": \"string\",\n  \"message_id\": \"string\",\n  \"conversation\": { ... },\n  \"message\": { ... }\n}\n```\n\n**Workflow:**\n1. Send this request to start a conversation\n2. Use the returned `conversation_id` and `message_id` to poll for results\n3. Once completed, use `conversation_id` for follow-up questions"
+					},
+					"response": []
+				},
+				{
+					"name": "List Conversations",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"pm.test(\"Status code is 200\", function () {",
+									"    pm.response.to.have.status(200);",
+									"});",
+									"",
+									"pm.test(\"Response has conversations array\", function () {",
+									"    var jsonData = pm.response.json();",
+									"    pm.expect(jsonData).to.have.property('conversations');",
+									"    pm.expect(jsonData.conversations).to.be.an('array');",
+									"});",
+									"",
+									"// Save first conversation ID if available",
+									"var jsonData = pm.response.json();",
+									"if (jsonData.conversations && jsonData.conversations.length > 0) {",
+									"    pm.collectionVariables.set(\"conversationId\", jsonData.conversations[0].conversation_id);",
+									"    console.log(\"✓ Found \" + jsonData.conversations.length + \" conversations\");",
+									"}"
+								],
+								"type": "text/javascript"
+							}
+						}
+					],
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{BASE_URL}}/genie/conversations",
+							"host": [
+								"{{BASE_URL}}"
+							],
+							"path": [
+								"genie",
+								"conversations"
+							]
+						},
+						"description": "Retrieves all conversations for the configured Genie space.\n\n**Response:**\n```json\n{\n  \"conversations\": [\n    {\n      \"conversation_id\": \"string\",\n      \"title\": \"string\",\n      \"created_timestamp\": number,\n      \"last_updated_timestamp\": number,\n      \"space_id\": \"string\",\n      \"user_id\": number\n    }\n  ],\n  \"next_page_token\": \"string\" (optional)\n}\n```\n\n**Use Case:**\n- Display conversation history in UI\n- Allow users to resume previous conversations\n- Show recent queries"
+					},
+					"response": []
+				}
+			],
+			"description": "Endpoints for managing conversations"
+		},
+		{
+			"name": "Messages",
+			"item": [
+				{
+					"name": "Send Message",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"pm.test(\"Status code is 200\", function () {",
+									"    pm.response.to.have.status(200);",
+									"});",
+									"",
+									"pm.test(\"Response has message_id\", function () {",
+									"    var jsonData = pm.response.json();",
+									"    pm.expect(jsonData).to.have.property('message_id');",
+									"});",
+									"",
+									"if (pm.response.code === 200) {",
+									"    var jsonData = pm.response.json();",
+									"    pm.collectionVariables.set(\"messageId\", jsonData.message_id);",
+									"    console.log(\"✓ Message sent: \" + jsonData.message_id);",
+									"}"
+								],
+								"type": "text/javascript"
+							}
+						}
+					],
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n  \"conversationId\": \"{{conversationId}}\",\n  \"content\": \"What about the previous quarter?\"\n}",
+							"options": {
+								"raw": {
+									"language": "json"
+								}
+							}
+						},
+						"url": {
+							"raw": "{{BASE_URL}}/genie/message",
+							"host": [
+								"{{BASE_URL}}"
+							],
+							"path": [
+								"genie",
+								"message"
+							]
+						},
+						"description": "Sends a follow-up message to an existing conversation.\n\n**Request Body:**\n```json\n{\n  \"conversationId\": \"string\",\n  \"content\": \"Your follow-up query\"\n}\n```\n\n**Response:**\n```json\n{\n  \"message_id\": \"string\",\n  \"message\": { ... }\n}\n```\n\n**Workflow:**\n1. Use `conversationId` from a previous conversation\n2. Send this request with your follow-up question\n3. Poll for results using the returned `message_id`"
+					},
+					"response": []
+				},
+				{
+					"name": "Poll Message Status",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"pm.test(\"Status code is 200\", function () {",
+									"    pm.response.to.have.status(200);",
+									"});",
+									"",
+									"pm.test(\"Response has message object\", function () {",
+									"    var jsonData = pm.response.json();",
+									"    pm.expect(jsonData).to.have.property('message');",
+									"    pm.expect(jsonData.message).to.have.property('status');",
+									"});",
+									"",
+									"// Check status and save statement_id if available",
+									"var jsonData = pm.response.json();",
+									"var status = jsonData.message.status;",
+									"console.log(\"Message status: \" + status);",
+									"",
+									"if (status === 'COMPLETED' || status === 'QUERY_RESULT_SUCCESS') {",
+									"    console.log(\"✓ Query completed successfully\");",
+									"    if (jsonData.message.attachments && jsonData.message.attachments.length > 0) {",
+									"        var query = jsonData.message.attachments[0].query;",
+									"        if (query && query.statement_id) {",
+									"            pm.collectionVariables.set(\"statementId\", query.statement_id);",
+									"            console.log(\"✓ Statement ID: \" + query.statement_id);",
+									"        }",
+									"    }",
+									"} else if (status === 'FAILED' || status === 'QUERY_RESULT_ERROR') {",
+									"    console.log(\"✗ Query failed\");",
+									"} else {",
+									"    console.log(\"⟳ Query still processing... (\" + status + \")\");",
+									"}"
+								],
+								"type": "text/javascript"
+							}
+						}
+					],
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n  \"conversationId\": \"{{conversationId}}\",\n  \"messageId\": \"{{messageId}}\"\n}",
+							"options": {
+								"raw": {
+									"language": "json"
+								}
+							}
+						},
+						"url": {
+							"raw": "{{BASE_URL}}/genie/poll",
+							"host": [
+								"{{BASE_URL}}"
+							],
+							"path": [
+								"genie",
+								"poll"
+							]
+						},
+						"description": "Polls for the status and result of a message.\n\n**Request Body:**\n```json\n{\n  \"conversationId\": \"string\",\n  \"messageId\": \"string\"\n}\n```\n\n**Response:**\n```json\n{\n  \"message\": {\n    \"message_id\": \"string\",\n    \"status\": \"COMPLETED\",\n    \"content\": \"string\",\n    \"attachments\": [...],\n    \"created_timestamp\": number,\n    \"last_updated_timestamp\": number\n  }\n}\n```\n\n**Status Values:**\n- `SUBMITTED` - Initial state\n- `EXECUTING_QUERY` - Processing\n- `QUERY_RESULT_SUCCESS` - Query completed\n- `QUERY_RESULT_ERROR` - Query failed\n- `COMPLETED` - Final success state\n- `FAILED` - Final failure state\n\n**Polling Strategy:**\n- Poll every 5 seconds initially\n- Use exponential backoff after 2 minutes\n- Maximum 10 minutes timeout"
+					},
+					"response": []
+				},
+				{
+					"name": "List Messages",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"pm.test(\"Status code is 200\", function () {",
+									"    pm.response.to.have.status(200);",
+									"});",
+									"",
+									"pm.test(\"Response has messages array\", function () {",
+									"    var jsonData = pm.response.json();",
+									"    pm.expect(jsonData).to.have.property('messages');",
+									"    pm.expect(jsonData.messages).to.be.an('array');",
+									"});",
+									"",
+									"var jsonData = pm.response.json();",
+									"console.log(\"✓ Found \" + jsonData.messages.length + \" messages\");"
+								],
+								"type": "text/javascript"
+							}
+						}
+					],
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{BASE_URL}}/genie/messages?conversationId={{conversationId}}",
+							"host": [
+								"{{BASE_URL}}"
+							],
+							"path": [
+								"genie",
+								"messages"
+							],
+							"query": [
+								{
+									"key": "conversationId",
+									"value": "{{conversationId}}"
+								}
+							]
+						},
+						"description": "Retrieves all messages in a conversation.\n\n**Query Parameters:**\n- `conversationId` (required): The conversation identifier\n\n**Response:**\n```json\n{\n  \"messages\": [\n    {\n      \"message_id\": \"string\",\n      \"content\": \"string\",\n      \"status\": \"string\",\n      \"role\": \"user\" | \"assistant\",\n      \"attachments\": [...],\n      \"created_timestamp\": number\n    }\n  ]\n}\n```\n\n**Use Case:**\n- Load conversation history\n- Display all messages in chat UI\n- Resume conversations"
+					},
+					"response": []
+				}
+			],
+			"description": "Endpoints for managing messages within conversations"
+		},
+		{
+			"name": "Query Execution",
+			"item": [
+				{
+					"name": "Execute Query",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"pm.test(\"Status code is 200\", function () {",
+									"    pm.response.to.have.status(200);",
+									"});",
+									"",
+									"pm.test(\"Response has result data\", function () {",
+									"    var jsonData = pm.response.json();",
+									"    pm.expect(jsonData).to.have.property('status');",
+									"});",
+									"",
+									"var jsonData = pm.response.json();",
+									"if (jsonData.status && jsonData.status.state) {",
+									"    console.log(\"Query state: \" + jsonData.status.state);",
+									"    if (jsonData.result && jsonData.result.data_array) {",
+									"        console.log(\"✓ Rows returned: \" + jsonData.result.data_array.length);",
+									"    }",
+									"}"
+								],
+								"type": "text/javascript"
+							}
+						}
+					],
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{BASE_URL}}/genie/execute?statementId={{statementId}}",
+							"host": [
+								"{{BASE_URL}}"
+							],
+							"path": [
+								"genie",
+								"execute"
+							],
+							"query": [
+								{
+									"key": "statementId",
+									"value": "{{statementId}}"
+								}
+							]
+						},
+						"description": "Executes and retrieves results for a SQL query.\n\n**Query Parameters:**\n- `statementId` (required): The statement identifier from message attachments\n\n**Response:**\n```json\n{\n  \"statement_id\": \"string\",\n  \"status\": {\n    \"state\": \"FINISHED\",\n    \"error\": { ... }\n  },\n  \"manifest\": {\n    \"schema\": {\n      \"columns\": [...]\n    },\n    \"total_row_count\": number\n  },\n  \"result\": {\n    \"data_array\": [[...]]\n  }\n}\n```\n\n**Workflow:**\n1. Poll message until status is COMPLETED\n2. Extract `statement_id` from message attachments\n3. Call this endpoint to get query results\n4. Display results in table format\n\n**Note:** Statement ID is available after the query is generated and executed by Genie."
+					},
+					"response": []
+				}
+			],
+			"description": "Endpoints for executing SQL queries and retrieving results"
+		},
+		{
+			"name": "Feedback",
+			"item": [
+				{
+					"name": "Send Feedback",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"pm.test(\"Status code is 200\", function () {",
+									"    pm.response.to.have.status(200);",
+									"});",
+									"",
+									"pm.test(\"Feedback accepted\", function () {",
+									"    var jsonData = pm.response.json();",
+									"    pm.expect(jsonData).to.have.property('success');",
+									"    pm.expect(jsonData.success).to.be.true;",
+									"});",
+									"",
+									"console.log(\"✓ Feedback submitted successfully\");"
+								],
+								"type": "text/javascript"
+							}
+						}
+					],
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n  \"conversationId\": \"{{conversationId}}\",\n  \"messageId\": \"{{messageId}}\",\n  \"rating\": \"POSITIVE\",\n  \"comment\": \"The query results were exactly what I needed!\"\n}",
+							"options": {
+								"raw": {
+									"language": "json"
+								}
+							}
+						},
+						"url": {
+							"raw": "{{BASE_URL}}/genie/feedback",
+							"host": [
+								"{{BASE_URL}}"
+							],
+							"path": [
+								"genie",
+								"feedback"
+							]
+						},
+						"description": "Submits feedback for a message response.\n\n**Request Body:**\n```json\n{\n  \"conversationId\": \"string\",\n  \"messageId\": \"string\",\n  \"rating\": \"POSITIVE\" | \"NEGATIVE\",\n  \"comment\": \"string\" (optional)\n}\n```\n\n**Response:**\n```json\n{\n  \"success\": true\n}\n```\n\n**Rating Values:**\n- `POSITIVE` - Helpful response\n- `NEGATIVE` - Not helpful response\n- `NONE` - Neutral/no rating\n\n**Use Case:**\n- Improve Genie's responses over time\n- Help space managers understand user satisfaction\n- Provide context for query improvements"
+					},
+					"response": []
+				}
+			],
+			"description": "Endpoints for submitting feedback on responses"
+		}
+	],
+	"event": [
+		{
+			"listen": "prerequest",
+			"script": {
+				"type": "text/javascript",
+				"exec": [
+					"// Set default base URL if not set",
+					"if (!pm.variables.get('BASE_URL')) {",
+					"    pm.variables.set('BASE_URL', 'http://localhost:3000/api');",
+					"    console.log('Using default BASE_URL: http://localhost:3000/api');",
+					"}"
+				]
+			}
+		},
+		{
+			"listen": "test",
+			"script": {
+				"type": "text/javascript",
+				"exec": [
+					"// Log response time",
+					"console.log('Response time: ' + pm.response.responseTime + 'ms');",
+					"",
+					"// Check for errors",
+					"if (pm.response.code >= 400) {",
+					"    var jsonData = pm.response.json();",
+					"    console.error('Error: ' + (jsonData.error || 'Unknown error'));",
+					"    if (jsonData.details) {",
+					"        console.error('Details:', JSON.stringify(jsonData.details, null, 2));",
+					"    }",
+					"}"
+				]
+			}
+		}
+	],
+	"variable": [
+		{
+			"key": "BASE_URL",
+			"value": "http://localhost:3000/api",
+			"type": "string"
+		},
+		{
+			"key": "conversationId",
+			"value": "",
+			"type": "string"
+		},
+		{
+			"key": "messageId",
+			"value": "",
+			"type": "string"
+		},
+		{
+			"key": "statementId",
+			"value": "",
+			"type": "string"
+		}
+	]
+}
+

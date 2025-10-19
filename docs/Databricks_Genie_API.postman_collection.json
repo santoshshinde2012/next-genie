@@ -1,0 +1,517 @@
+{
+	"info": {
+		"_postman_id": "databricks-genie-api-v1",
+		"name": "Databricks Genie API",
+		"description": "Official Databricks Genie Conversation API endpoints for natural language data queries.\n\n## Overview\nDatabricks Genie allows you to interact with your data using natural language. This collection contains all the official Genie API endpoints.\n\n## Authentication\nAll requests require Bearer token authentication using a Databricks Personal Access Token.\n\n## Base URL\n`https://{DATABRICKS_HOST}`\n\n## Required Variables\n- `DATABRICKS_HOST`: Your Databricks workspace URL (e.g., adb-1234567890123456.7.azuredatabricks.net)\n- `DATABRICKS_TOKEN`: Your Personal Access Token\n- `DATABRICKS_SPACE_ID`: Your Genie Space ID\n\n## References\n- [Databricks Genie API Documentation](https://docs.databricks.com/api/workspace/genie)\n- [Databricks Genie Blog](https://www.databricks.com/blog/genie-conversation-apis-public-preview)",
+		"schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json",
+		"_exporter_id": "databricks-genie"
+	},
+	"auth": {
+		"type": "bearer",
+		"bearer": [
+			{
+				"key": "token",
+				"value": "{{DATABRICKS_TOKEN}}",
+				"type": "string"
+			}
+		]
+	},
+	"item": [
+		{
+			"name": "Conversations",
+			"item": [
+				{
+					"name": "Start Conversation",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"// Validate response",
+									"pm.test(\"Status code is 200\", function () {",
+									"    pm.response.to.have.status(200);",
+									"});",
+									"",
+									"pm.test(\"Response has conversation_id\", function () {",
+									"    var jsonData = pm.response.json();",
+									"    pm.expect(jsonData).to.have.property('conversation_id');",
+									"    pm.expect(jsonData).to.have.property('message_id');",
+									"});",
+									"",
+									"// Save conversation_id and message_id for subsequent requests",
+									"if (pm.response.code === 200) {",
+									"    var jsonData = pm.response.json();",
+									"    pm.collectionVariables.set(\"CONVERSATION_ID\", jsonData.conversation_id);",
+									"    pm.collectionVariables.set(\"MESSAGE_ID\", jsonData.message_id);",
+									"    console.log(\"Saved conversation_id: \" + jsonData.conversation_id);",
+									"    console.log(\"Saved message_id: \" + jsonData.message_id);",
+									"}"
+								],
+								"type": "text/javascript"
+							}
+						}
+					],
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n  \"content\": \"Show me the top 10 customers by revenue\"\n}"
+						},
+						"url": {
+							"raw": "https://{{DATABRICKS_HOST}}/api/2.0/genie/spaces/{{DATABRICKS_SPACE_ID}}/start-conversation",
+							"protocol": "https",
+							"host": [
+								"{{DATABRICKS_HOST}}"
+							],
+							"path": [
+								"api",
+								"2.0",
+								"genie",
+								"spaces",
+								"{{DATABRICKS_SPACE_ID}}",
+								"start-conversation"
+							]
+						},
+						"description": "Starts a new conversation with Genie. The first message initiates the conversation and Genie will process the query.\n\n**Request Body:**\n- `content` (string, required): The natural language query\n\n**Response:**\n- `conversation_id`: Unique identifier for the conversation\n- `message_id`: Unique identifier for the message\n- `conversation`: Full conversation object\n- `message`: Full message object with status"
+					},
+					"response": []
+				},
+				{
+					"name": "List Conversations",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"pm.test(\"Status code is 200\", function () {",
+									"    pm.response.to.have.status(200);",
+									"});",
+									"",
+									"pm.test(\"Response has conversations array\", function () {",
+									"    var jsonData = pm.response.json();",
+									"    pm.expect(jsonData).to.have.property('conversations');",
+									"    pm.expect(jsonData.conversations).to.be.an('array');",
+									"});"
+								],
+								"type": "text/javascript"
+							}
+						}
+					],
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "https://{{DATABRICKS_HOST}}/api/2.0/genie/spaces/{{DATABRICKS_SPACE_ID}}/conversations",
+							"protocol": "https",
+							"host": [
+								"{{DATABRICKS_HOST}}"
+							],
+							"path": [
+								"api",
+								"2.0",
+								"genie",
+								"spaces",
+								"{{DATABRICKS_SPACE_ID}}",
+								"conversations"
+							]
+						},
+						"description": "Retrieves all conversations in a Genie space.\n\n**Query Parameters:**\n- `page_token` (optional): Token for pagination\n- `page_size` (optional): Number of results per page\n\n**Response:**\n- `conversations`: Array of conversation objects\n- `next_page_token`: Token for next page (if available)"
+					},
+					"response": []
+				},
+				{
+					"name": "Get Conversation",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"pm.test(\"Status code is 200\", function () {",
+									"    pm.response.to.have.status(200);",
+									"});",
+									"",
+									"pm.test(\"Response has conversation details\", function () {",
+									"    var jsonData = pm.response.json();",
+									"    pm.expect(jsonData).to.have.property('conversation_id');",
+									"    pm.expect(jsonData).to.have.property('title');",
+									"});"
+								],
+								"type": "text/javascript"
+							}
+						}
+					],
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "https://{{DATABRICKS_HOST}}/api/2.0/genie/spaces/{{DATABRICKS_SPACE_ID}}/conversations/{{CONVERSATION_ID}}",
+							"protocol": "https",
+							"host": [
+								"{{DATABRICKS_HOST}}"
+							],
+							"path": [
+								"api",
+								"2.0",
+								"genie",
+								"spaces",
+								"{{DATABRICKS_SPACE_ID}}",
+								"conversations",
+								"{{CONVERSATION_ID}}"
+							]
+						},
+						"description": "Retrieves details of a specific conversation.\n\n**Path Parameters:**\n- `conversation_id`: The conversation identifier\n\n**Response:**\n- Conversation object with metadata"
+					},
+					"response": []
+				}
+			],
+			"description": "Endpoints for managing Genie conversations"
+		},
+		{
+			"name": "Messages",
+			"item": [
+				{
+					"name": "Send Message",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"pm.test(\"Status code is 200\", function () {",
+									"    pm.response.to.have.status(200);",
+									"});",
+									"",
+									"pm.test(\"Response has message_id\", function () {",
+									"    var jsonData = pm.response.json();",
+									"    pm.expect(jsonData).to.have.property('message_id');",
+									"});",
+									"",
+									"// Save message_id for polling",
+									"if (pm.response.code === 200) {",
+									"    var jsonData = pm.response.json();",
+									"    pm.collectionVariables.set(\"MESSAGE_ID\", jsonData.message_id);",
+									"    console.log(\"Saved message_id: \" + jsonData.message_id);",
+									"}"
+								],
+								"type": "text/javascript"
+							}
+						}
+					],
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n  \"content\": \"What about last month?\"\n}"
+						},
+						"url": {
+							"raw": "https://{{DATABRICKS_HOST}}/api/2.0/genie/spaces/{{DATABRICKS_SPACE_ID}}/conversations/{{CONVERSATION_ID}}/messages",
+							"protocol": "https",
+							"host": [
+								"{{DATABRICKS_HOST}}"
+							],
+							"path": [
+								"api",
+								"2.0",
+								"genie",
+								"spaces",
+								"{{DATABRICKS_SPACE_ID}}",
+								"conversations",
+								"{{CONVERSATION_ID}}",
+								"messages"
+							]
+						},
+						"description": "Sends a follow-up message to an existing conversation.\n\n**Path Parameters:**\n- `conversation_id`: The conversation identifier\n\n**Request Body:**\n- `content` (string, required): The follow-up query\n\n**Response:**\n- `message_id`: Unique identifier for the message\n- `message`: Full message object with status"
+					},
+					"response": []
+				},
+				{
+					"name": "Get Message (Poll Status)",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"pm.test(\"Status code is 200\", function () {",
+									"    pm.response.to.have.status(200);",
+									"});",
+									"",
+									"pm.test(\"Response has message status\", function () {",
+									"    var jsonData = pm.response.json();",
+									"    pm.expect(jsonData).to.have.property('status');",
+									"});",
+									"",
+									"// Save statement_id if query was generated",
+									"var jsonData = pm.response.json();",
+									"if (jsonData.attachments && jsonData.attachments.length > 0) {",
+									"    var query = jsonData.attachments[0].query;",
+									"    if (query && query.statement_id) {",
+									"        pm.collectionVariables.set(\"STATEMENT_ID\", query.statement_id);",
+									"        console.log(\"Saved statement_id: \" + query.statement_id);",
+									"    }",
+									"}"
+								],
+								"type": "text/javascript"
+							}
+						}
+					],
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "https://{{DATABRICKS_HOST}}/api/2.0/genie/spaces/{{DATABRICKS_SPACE_ID}}/conversations/{{CONVERSATION_ID}}/messages/{{MESSAGE_ID}}",
+							"protocol": "https",
+							"host": [
+								"{{DATABRICKS_HOST}}"
+							],
+							"path": [
+								"api",
+								"2.0",
+								"genie",
+								"spaces",
+								"{{DATABRICKS_SPACE_ID}}",
+								"conversations",
+								"{{CONVERSATION_ID}}",
+								"messages",
+								"{{MESSAGE_ID}}"
+							]
+						},
+						"description": "Retrieves the status and result of a message. Use this endpoint to poll for query completion.\n\n**Path Parameters:**\n- `conversation_id`: The conversation identifier\n- `message_id`: The message identifier\n\n**Response:**\n- Message object with current status\n- `status`: SUBMITTED, EXECUTING_QUERY, COMPLETED, FAILED, etc.\n- `attachments`: Query results and metadata\n\n**Status Flow:**\n1. SUBMITTED → Initial state\n2. EXECUTING_QUERY → Query is running\n3. QUERY_RESULT_SUCCESS/ERROR → Query completed\n4. COMPLETED → Final state"
+					},
+					"response": []
+				},
+				{
+					"name": "List Messages",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"pm.test(\"Status code is 200\", function () {",
+									"    pm.response.to.have.status(200);",
+									"});",
+									"",
+									"pm.test(\"Response has messages array\", function () {",
+									"    var jsonData = pm.response.json();",
+									"    pm.expect(jsonData).to.have.property('messages');",
+									"    pm.expect(jsonData.messages).to.be.an('array');",
+									"});"
+								],
+								"type": "text/javascript"
+							}
+						}
+					],
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "https://{{DATABRICKS_HOST}}/api/2.0/genie/spaces/{{DATABRICKS_SPACE_ID}}/conversations/{{CONVERSATION_ID}}/messages",
+							"protocol": "https",
+							"host": [
+								"{{DATABRICKS_HOST}}"
+							],
+							"path": [
+								"api",
+								"2.0",
+								"genie",
+								"spaces",
+								"{{DATABRICKS_SPACE_ID}}",
+								"conversations",
+								"{{CONVERSATION_ID}}",
+								"messages"
+							]
+						},
+						"description": "Retrieves all messages in a conversation.\n\n**Path Parameters:**\n- `conversation_id`: The conversation identifier\n\n**Response:**\n- `messages`: Array of message objects with status and results"
+					},
+					"response": []
+				}
+			],
+			"description": "Endpoints for managing messages within conversations"
+		},
+		{
+			"name": "Query Execution",
+			"item": [
+				{
+					"name": "Execute SQL Statement",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"pm.test(\"Status code is 200\", function () {",
+									"    pm.response.to.have.status(200);",
+									"});",
+									"",
+									"pm.test(\"Response has statement status\", function () {",
+									"    var jsonData = pm.response.json();",
+									"    pm.expect(jsonData).to.have.property('status');",
+									"});",
+									"",
+									"pm.test(\"Query execution successful\", function () {",
+									"    var jsonData = pm.response.json();",
+									"    if (jsonData.status && jsonData.status.state) {",
+									"        pm.expect(['SUCCEEDED', 'FINISHED']).to.include(jsonData.status.state);",
+									"    }",
+									"});"
+								],
+								"type": "text/javascript"
+							}
+						}
+					],
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "https://{{DATABRICKS_HOST}}/api/2.0/sql/statements/{{STATEMENT_ID}}",
+							"protocol": "https",
+							"host": [
+								"{{DATABRICKS_HOST}}"
+							],
+							"path": [
+								"api",
+								"2.0",
+								"sql",
+								"statements",
+								"{{STATEMENT_ID}}"
+							]
+						},
+						"description": "Retrieves the execution results for a SQL statement generated by Genie.\n\n**Path Parameters:**\n- `statement_id`: The statement identifier from message attachments\n\n**Response:**\n- `status`: Execution status (SUCCEEDED, RUNNING, FAILED)\n- `manifest`: Schema and metadata\n- `result`: Query results as data_array\n\n**Note:** The statement_id is obtained from the message attachments after polling."
+					},
+					"response": []
+				}
+			],
+			"description": "Endpoints for executing and retrieving SQL query results"
+		},
+		{
+			"name": "Feedback",
+			"item": [
+				{
+					"name": "Send Feedback",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"pm.test(\"Status code is 200\", function () {",
+									"    pm.response.to.have.status(200);",
+									"});"
+								],
+								"type": "text/javascript"
+							}
+						}
+					],
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n  \"rating\": \"POSITIVE\",\n  \"comment\": \"Great response, very helpful!\"\n}"
+						},
+						"url": {
+							"raw": "https://{{DATABRICKS_HOST}}/api/2.0/genie/spaces/{{DATABRICKS_SPACE_ID}}/conversations/{{CONVERSATION_ID}}/messages/{{MESSAGE_ID}}/feedback",
+							"protocol": "https",
+							"host": [
+								"{{DATABRICKS_HOST}}"
+							],
+							"path": [
+								"api",
+								"2.0",
+								"genie",
+								"spaces",
+								"{{DATABRICKS_SPACE_ID}}",
+								"conversations",
+								"{{CONVERSATION_ID}}",
+								"messages",
+								"{{MESSAGE_ID}}",
+								"feedback"
+							]
+						},
+						"description": "Submits feedback for a Genie response.\n\n**Path Parameters:**\n- `conversation_id`: The conversation identifier\n- `message_id`: The message identifier\n\n**Request Body:**\n- `rating` (string, required): POSITIVE, NEGATIVE, or NONE\n- `comment` (string, optional): Additional feedback text\n\n**Response:**\n- Success confirmation"
+					},
+					"response": []
+				}
+			],
+			"description": "Endpoints for submitting feedback on Genie responses"
+		}
+	],
+	"event": [
+		{
+			"listen": "prerequest",
+			"script": {
+				"type": "text/javascript",
+				"exec": [
+					"// Validate required environment variables",
+					"if (!pm.variables.get('DATABRICKS_HOST')) {",
+					"    throw new Error('DATABRICKS_HOST variable is not set');",
+					"}",
+					"if (!pm.variables.get('DATABRICKS_TOKEN')) {",
+					"    throw new Error('DATABRICKS_TOKEN variable is not set');",
+					"}",
+					"if (!pm.variables.get('DATABRICKS_SPACE_ID')) {",
+					"    throw new Error('DATABRICKS_SPACE_ID variable is not set');",
+					"}"
+				]
+			}
+		},
+		{
+			"listen": "test",
+			"script": {
+				"type": "text/javascript",
+				"exec": [
+					"// Global response time check",
+					"pm.test(\"Response time is reasonable\", function () {",
+					"    pm.expect(pm.response.responseTime).to.be.below(30000);",
+					"});"
+				]
+			}
+		}
+	],
+	"variable": [
+		{
+			"key": "DATABRICKS_HOST",
+			"value": "your-workspace.databricks.com",
+			"type": "string"
+		},
+		{
+			"key": "DATABRICKS_TOKEN",
+			"value": "your-personal-access-token",
+			"type": "string"
+		},
+		{
+			"key": "DATABRICKS_SPACE_ID",
+			"value": "your-genie-space-id",
+			"type": "string"
+		},
+		{
+			"key": "CONVERSATION_ID",
+			"value": "",
+			"type": "string"
+		},
+		{
+			"key": "MESSAGE_ID",
+			"value": "",
+			"type": "string"
+		},
+		{
+			"key": "STATEMENT_ID",
+			"value": "",
+			"type": "string"
+		}
+	]
+}
+
